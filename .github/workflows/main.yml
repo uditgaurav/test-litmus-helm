@@ -51,8 +51,6 @@ jobs:
           wget https://github.com/roboll/helmfile/releases/download/v0.135.0/helmfile_linux_amd64 -O helmfile
           chmod +x helmfile
 
-
-
       #Install and configure a kind cluster
       - name: Installing Prerequisites (KinD Cluster)
         uses: engineerd/setup-kind@v0.5.0
@@ -71,12 +69,7 @@ jobs:
           sleep 30
 
       - run: ./helmfile sync
-
-      - name: Setup Litmus
-        uses: mayadata-io/github-chaos-actions@v0.3.0
-        env:
-          INSTALL_LITMUS: true
-
+      
       - name: Running Litmus pod delete chaos experiment
         if: startsWith(github.event.comment.body, '/run-e2e-pod-delete') || startsWith(github.event.comment.body, '/run-e2e-all')
         uses: mayadata-io/github-chaos-actions@v0.3.0
