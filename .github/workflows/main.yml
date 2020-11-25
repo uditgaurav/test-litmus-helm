@@ -1,0 +1,69 @@
+name: LitmusHelm-CI
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  tests:
+    if: contains(github.event.comment.html_url, '/pull/') && startsWith(github.event.comment.body, '/run-e2e')
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Notification for e2e Start
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: "${{ github.event.comment.id }}"
+          body: |
+            **Test Status:** The e2e test has been started please wait for the results ... 
+            ****     
+            | Experiment | Result | Runtime |
+            |------------|--------|---------|
+      #Using the last commit id of pull request
+      - uses: octokit/request-action@v2.x
+        id: get_PR_commits
+        with:
+          route: GET /repos/:repo/pulls/:pull_number/commits
+          repo: ${{ github.repository }}
+          pull_number: ${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: set commit to output
+        id: getcommit
+        run: | 
+           prsha=$(echo $response | jq '.[-1].sha'  | tr -d '"')
+           echo "::set-output name=sha::$prsha" 
+        env: 
+          response:  ${{ steps.get_PR_commits.outputs.data }}
+          
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{steps.getcommit.outputs.sha}}
+
+
+      - name: Install Litmus using helmfile
+        run: helmfile sync
+
+      - name: Check the Installation
+        run: |
+          kubectl get ns
+          kubectl get pods -n Litmus
+          kubectl get chaosexperiment
+
+      # #Install and configure a kind cluster
+      # - name: Installing Prerequisites (KinD Cluster)
+      #   uses: engineerd/setup-kind@v0.5.0
+      #   with:
+      #       version: "v0.7.0"
+
+      # - name: Configuring and testing the Installation
+      #   run: |
+      #     kubectl cluster-info --context kind-kind
+      #     kind get kubeconfig --internal >$HOME/.kube/config
+      #     kubectl get nodes  
+
+      # - name: Deploy a sample application for chaos injection
+      #   run: |
+      #     kubectl apply -f https://raw.githubusercontent.com/litmuschaos/chaos-ci-lib/master/app/nginx.yml
+      #     sleep 30
+
