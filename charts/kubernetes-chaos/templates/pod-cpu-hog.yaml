@@ -1,0 +1,88 @@
+{{ if not (has "pod-cpu-hog" .Values.experiments.disabled) }}
+---
+apiVersion: litmuschaos.io/v1alpha1
+description:
+  message: |
+    Injects cpu consumption on pods belonging to an app deployment
+kind: ChaosExperiment
+metadata:
+  name: pod-cpu-hog
+  labels:
+    instance: {{ .Release.Name }}
+    chart: {{ include "kubernetes-chaos.chart" . }}
+    litmuschaos.io/version: {{ .Chart.AppVersion }}
+spec:
+  definition:
+    scope: Namespaced
+    permissions:
+      - apiGroups:
+          - ""
+          - "batch"
+          - "litmuschaos.io"
+        resources:
+          - "jobs"
+          - "pods"
+          - "pods/log"
+          - "pods/exec"
+          - "events"
+          - "chaosengines"
+          - "chaosexperiments"
+          - "chaosresults"
+        verbs:
+          - "create"
+          - "list"
+          - "get"
+          - "patch"
+          - "update"
+          - "delete"
+          - "deletecollection"
+    image: "{{ .Values.image.litmusGO.repository }}:{{ .Values.image.litmusGO.tag }}"
+    imagePullPolicy: {{ .Values.image.litmusGO.pullPolicy }}
+    args:
+    - -c
+    - ./experiments -name pod-cpu-hog
+    command:
+    - /bin/bash
+    env:
+
+    - name: TOTAL_CHAOS_DURATION
+      value: '60'
+
+    - name: CPU_CORES
+      value: '1'
+
+    # Percentage of total pods to target
+    - name: PODS_AFFECTED_PERC
+      value: ''
+
+    # Period to wait before injection of chaos in sec
+    - name: RAMP_TIME
+      value: ''
+
+    # Env var that describes the library used to execute the chaos
+    # Default: litmus. Supported values: litmus, pumba
+    - name: LIB
+      value: 'litmus'
+
+    - name: CHAOS_INJECT_COMMAND
+      value: 'md5sum /dev/zero'
+
+    - name: CHAOS_KILL_COMMAND
+      value: "kill -9 $(ps afx | grep \"[md5sum] /dev/zero\" | awk '{print$1}' | tr '\n' ' ')"
+
+    ## it defines the sequence of chaos execution for multiple target pods
+    ## supported values: serial, parallel
+    - name: SEQUENCE
+      value: 'parallel'      
+
+    # It is used in pumba lib only  
+    - name: LIB_IMAGE
+      value: "{{ .Values.image.stressChaos.stressImage }}" 
+
+    - name: TARGET_PODS
+      value: ''
+
+    labels:
+      name: pod-cpu-hog
+      app.kubernetes.io/part-of: litmus
+{{ end }}
