@@ -51,7 +51,7 @@ jobs:
           wget https://github.com/roboll/helmfile/releases/download/v0.135.0/helmfile_linux_amd64 -O helmfile
           chmod +x helmfile
 
-      - run: ./helmfile sync
+      - run: ./helmfile --namespace=default sync
 
       - name: Check the Installation
         run: |
