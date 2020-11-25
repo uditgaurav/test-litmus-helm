@@ -43,7 +43,7 @@ jobs:
 
       - name: Install Litmus using helmfile
         run: |
-          wget https://github.com/roboll/helmfile/releases/download/v0.135.0/helmfile_darwin_amd64 -O helmfile
+          wget https://github.com/roboll/helmfile/releases/download/v0.135.0/helmfile_linux_amd64 -O helmfile
           chmod +x helmfile
           ./helmfile sync
 
