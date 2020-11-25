@@ -70,10 +70,11 @@ jobs:
           kubectl apply -f https://raw.githubusercontent.com/litmuschaos/chaos-ci-lib/master/app/nginx.yml
           sleep 30
 
-      - run: ./helmfile --namespace=default sync
+      - run: ./helmfile sync
 
       - name: Check the Installation
         run: |
+          sleep 30
           kubectl get ns
           kubectl get pods -n Litmus
           kubectl get chaosexperiment
