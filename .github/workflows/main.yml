@@ -41,11 +41,17 @@ jobs:
           ref: ${{steps.getcommit.outputs.sha}}
 
 
-      - name: Install Litmus using helmfile
+      - name: Install helm and helmfile
         run: |
+          echo "Installting helm .........................."
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod 700 get_helm.sh 
+          ./get_helm.sh
+          echo "Installting helmfile ......................"
           wget https://github.com/roboll/helmfile/releases/download/v0.135.0/helmfile_linux_amd64 -O helmfile
           chmod +x helmfile
-          ./helmfile sync
+
+      - run: ./helmfile sync
 
       - name: Check the Installation
         run: |
